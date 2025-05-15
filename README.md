@@ -1,7 +1,7 @@
 # Real2Render2Real
 **Scaling Robot Data Without Dynamics Simulation or Robot Hardware**
 
-[project page](real2render2real.com) | [arxiv](https://arxiv.org/abs/2505.09601)
+[project page](https://real2render2real.com) | [arxiv](https://arxiv.org/abs/2505.09601)
 
 Justin Yu*, Letian Fu*, Huang Huang, Karim El-Refai, Rares Ambrus, Richard Cheng, Muhammad Zubair Irshad, Ken Goldberg
 
