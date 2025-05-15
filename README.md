@@ -15,4 +15,4 @@ University of California, Berkeley | Toyota Research Institute
 - [ ] Release the datasets to recreate results (**September 15th, 2025**)
 - [ ] Release our policy training infrastructure (**September 15th, 2025**)
 
-The code used to deploy high-frequency visuomotor policies on the YuMi IRB14000 robot is hosted on repo [uynitsuj/yumi_realtime](https://github.com/uynitsuj/yumi_realtime)
+The code used in this project to deploy high-frequency visuomotor policies on the YuMi IRB14000 robot is hosted on repo [uynitsuj/yumi_realtime](https://github.com/uynitsuj/yumi_realtime)
