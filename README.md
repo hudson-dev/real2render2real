@@ -11,8 +11,8 @@ University of California, Berkeley | Toyota Research Institute
 Real2Render2Real (R2R2R) is a scalable pipeline for generating robot training data without physics simulation or teleoperation. Using object scans and a single monocular video, R2R2R reconstructs 3D geometry and motion, then synthesizes thousands of diverse, physically plausible demonstrations for training generalist manipulation policies. Our experiments show that models trained on R2R2R data alone can achieve comparable performance to those trained on teleoperated demonstrations, while requiring a fraction of the time to generate.
 
 ## TODO
--[ ] Release real-to-sim pipeline (**September 15th, 2025**)
--[ ] Release the datasets to recreate results (**September 15th, 2025**)
--[ ] Release our policy training infrastructure (**September 15th, 2025**)
+- [ ] Release real-to-sim pipeline (**September 15th, 2025**)
+- [ ] Release the datasets to recreate results (**September 15th, 2025**)
+- [ ] Release our policy training infrastructure (**September 15th, 2025**)
 
 The code used to deploy high-frequency visuomotor policies on the YuMi IRB14000 robot is hosted on repo [uynitsuj/yumi_realtime](https://github.com/uynitsuj/yumi_realtime)
