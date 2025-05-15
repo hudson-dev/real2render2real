@@ -1,14 +1,14 @@
 # Real2Render2Real
+**Scaling Robot Data Without Dynamics Simulation or Robot Hardware**
+
 [project page](real2render2real.com) | [arxiv](https://arxiv.org/abs/2505.09601)
 
 Justin Yu*, Letian Fu*, Huang Huang, Karim El-Refai, Rares Ambrus, Richard Cheng, Muhammad Zubair Irshad, Ken Goldberg
 
-**Real2Render2Real: Scaling Robot Data Without Dynamics Simulation or Robot Hardware**
-
 University of California, Berkeley | Toyota Research Institute
 *Equal contribution
 
-Real2Render2Real (R2R2R) is a scalable pipeline for generating robot training data without physics simulation or teleoperation. Using object scans and a single monocular video, R2R2R reconstructs 3D geometry and motion, then synthesizes thousands of diverse, physically plausible demonstrations for training generalist manipulation policies. Our experiments show that models trained on R2R2R data alone can achieve comparable performance to those trained on teleoperated demonstrations, while requiring a fraction of the time to generate.
+**Real2Render2Real (R2R2R)** is a scalable pipeline for generating robot training data without physics simulation or teleoperation. Using object scans and a single monocular video, R2R2R reconstructs 3D geometry and motion, then synthesizes thousands of diverse, physically plausible demonstrations for training generalist manipulation policies. Our experiments show that models trained on R2R2R data alone can achieve comparable performance to those trained on teleoperated demonstrations, while requiring a fraction of the time to generate.
 
 ## TODO
 - [ ] Release real-to-sim pipeline (**September 15th, 2025**)
