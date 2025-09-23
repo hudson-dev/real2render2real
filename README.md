@@ -63,7 +63,7 @@ First we need to segment the model. To do this, click on the "Click" button, the
 <img src="img_assets/3_dig_gui_adjust.png" width="70%" alt="image">
 Next adjust the group level until only the object is segmented, like this:
 <img src="img_assets/4_dig_gui_save.png" width="70%" alt="image">
-For a rigid object, you will just press "Save Rigid-Body State". For an articulated object switch to "Cluster" mode, then click "Cluster Scene" try to pick a scale such that the fewest parts are segmented while maintaing the part of interest. You can cluster multiple times, only the final clusters are saved. Then press "Save Articulated Body State". For visual clarity check out Robot See Robot Do's [explanation](https://github.com/uynitsuj/rsrd?tab=readme-ov-file#training-4d-dpm)!
+For a rigid object, you will just press "Save Rigid-Body State". For an articulated object switch to "Cluster" mode, then click "Cluster Scene" try to pick a scale such that the fewest parts are segmented while maintaing the part of interest. You can cluster multiple times, only the final clusters are saved. Then press "Save Articulated Body State". For visual clarity check out Robot See Robot Do's explanation: https://github.com/uynitsuj/rsrd?tab=readme-ov-file#training-4d-dpm
 <img src="img_assets/5_dig_gui_final.png" width="70%" alt="image">
 If you want to segment multiple rigid objects you will have to then press "Undo" and repeat the process for the next object. Each clustered object can be found in `outputs/datasetname/state_rigid_timestamp/`.
 
