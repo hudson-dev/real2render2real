@@ -47,12 +47,12 @@ To capture your own objects you should follow [this guide](https://docs.nerf.stu
 ### Training 4D-DPM
 Note: if you aren't training from scratch and are using our provided GARField and DiG outputs you will have to edit the data path to reflect the scan's path on your machine in the `config.yml` for GARField and DiG.  
 
-1) **Train GARField** We train GARField for 8000 steps by running the following in the root of the repo: `ns-train garfield --data <path/to/datasetname>`. This will produce an output config file inside `output/datasetname/garfield/<timestamp>/config.yml`. Ex:
+1) **Train GARField** We train GARField for 8000 steps by running the following in the root of the repo: `ns-train garfield --data <path/to/datasetname>`. This will produce an output config file inside `output/datasetname/garfield/<timestamp>/config.yml`. Example run:
 ```
 ns-train garfield --data jy_scans/coffee_maker
 ```
 
-2) **Train DiG**  We then train DiG for 8000 steps, once again running in the root of the repo: `ns-train dig --data <path/to/data/directory> --pipeline.garfield-ckpt <path/to/config.yml>`, using the output config file from the GARField training. Ex:
+2) **Train DiG**  We then train DiG for 8000 steps, once again running in the root of the repo: `ns-train dig --data <path/to/data/directory> --pipeline.garfield-ckpt <path/to/config.yml>`, using the output config file from the GARField training. Example run:
 ```
 ns-train dig --data jy_scans/coffee_maker  --pipeline.garfield-ckpt outputs/coffee_maker/garfield/2025-02-16_195942/config.yml
 ```
@@ -63,9 +63,9 @@ First we need to segment the model. To do this, click on the "Click" button, the
 <img src="img_assets/3_dig_gui_adjust.png" width="70%" alt="image">
 Next adjust the group level until only the object is segmented, like this:
 <img src="img_assets/4_dig_gui_save.png" width="70%" alt="image">
-For a rigid object, you will just press "Save Rigid-Body State". For an articulated object switch to "Cluster" mode, then click "Cluster Scene" try to pick a scale such that the fewest parts are segmented while maintaing the part of interest. You can cluster multiple times, only the final clusters are saved. Then press "Save Articulated Body State". For visual clarity check out [Robot See Robot Do's explanation](https://github.com/uynitsuj/rsrd?tab=readme-ov-file#training-4d-dpm)!
+For a rigid object, you will just press "Save Rigid-Body State". For an articulated object switch to "Cluster" mode, then click "Cluster Scene" try to pick a scale such that the fewest parts are segmented while maintaing the part of interest. You can cluster multiple times, only the final clusters are saved. Then press "Save Articulated Body State". For visual clarity check out Robot See Robot Do's [explanation](https://github.com/uynitsuj/rsrd?tab=readme-ov-file#training-4d-dpm)!
 <img src="img_assets/5_dig_gui_final.png" width="70%" alt="image">
-If you want to segment multiple rigid objects you will have to then press "Undo" and repeat the process for the next object. Each clustered object can be found in `outputs/datasetname/state_rigid_<timestamp>/`.
+If you want to segment multiple rigid objects you will have to then press "Undo" and repeat the process for the next object. Each clustered object can be found in `outputs/datasetname/state_rigid_timestamp/`.
 
 ### Reconstructing Video Motion
 We require hand tracking to sample grasps so please follow the steps to install [HaMeR](https://github.com/geopavlakos/hamer), this will involve downloading model weights. Make sure that their [demo script](https://github.com/geopavlakos/hamer?tab=readme-ov-file#demo) runs properly before continuing!  
