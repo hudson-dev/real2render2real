@@ -1,0 +1,18 @@
+[submodule "dependencies/rsrd"]
+	path = dependencies/rsrd
+	url = https://github.com/uynitsuj/rsrd.git
+[submodule "dependencies/IsaacLab"]
+	path = dependencies/IsaacLab
+	url = https://github.com/uynitsuj/IsaacLab.git
+[submodule "dependencies/tinydp"]
+	path = dependencies/tinydp
+	url = https://github.com/Max-Fu/tinydp
+[submodule "dependencies/openpi"]
+	path = dependencies/openpi
+	url = https://github.com/Max-Fu/openpi.git
+[submodule "dependencies/SuGaR"]
+	path = dependencies/SuGaR
+	url = https://github.com/uynitsuj/SuGaR.git
+[submodule "dependencies/trajgen"]
+	path = dependencies/trajgen
+	url = https://github.com/uynitsuj/trajgen.git

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "real2render2real"
+version = "0.0.1"
+description = " Scaling Robot Data Without Dynamics Simulation or Robot Hardware"
+authors = [
+    {name = "Justin Yu", email = "yujustin@berkeley.edu"},
+]
+license = {text = "MIT Software License"}
+readme = "README.md"
+requires-python = ">=3.10, <3.12"
+dependencies = [
+    "numpy==1.26.4",
+    "viser",
+    "viser[examples]",
+    "tyro",
+    "jax[cuda12]==0.5.3",
+    "jaxtyping==0.3.2",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["catkin_ws*"]
