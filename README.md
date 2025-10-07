@@ -49,12 +49,12 @@ Note: if you aren't training from scratch and are using our provided GARField an
 
 1) **Train GARField** We train GARField for 8000 steps by running the following in the root of the repo: `ns-train garfield --data <path/to/datasetname>`. This will produce an output config file inside `output/datasetname/garfield/<timestamp>/config.yml`. Example run:
 ```
-ns-train garfield --data jy_scans/coffee_maker
+ns-train garfield --data scans/coffee_maker
 ```
 
 2) **Train DiG**  We then train DiG for 8000 steps, once again running in the root of the repo: `ns-train dig --data <path/to/data/directory> --pipeline.garfield-ckpt <path/to/config.yml>`, using the output config file from the GARField training. Example run:
 ```
-ns-train dig --data jy_scans/coffee_maker  --pipeline.garfield-ckpt outputs/coffee_maker/garfield/2025-02-16_195942/config.yml
+ns-train dig --data scans/coffee_maker  --pipeline.garfield-ckpt outputs/coffee_maker/garfield/2025-02-16_195942/config.yml
 ```
 
 3) **Segment the model**: inside the viewer for DiG, you should see the following GUI:
@@ -73,7 +73,7 @@ We require hand tracking to sample grasps so please follow the steps to install 
 Example run:
 ```bash
 conda activate r2r2r_rsrd
-python dependencies/rsrd/scripts/run_tracker.py  --is-obj-jointed False --dig-config-path outputs/cardboard_box/dig/2025-04-18_204749/config.yml  --video-path jy_demonstrations/cardboard_box_lift.MOV --output-dir outputs/cardboard_box/track --save-hand`
+python dependencies/rsrd/scripts/run_tracker.py  --is-obj-jointed False --dig-config-path outputs/cardboard_box/dig/2025-04-18_204749/config.yml  --video-path demonstrations/cardboard_box_lift.MOV --output-dir outputs/cardboard_box/track --save-hand`
 ```
 
 
@@ -83,14 +83,14 @@ Set up the conda environment for running SuGaR by following the steps in [env_3d
 Training SuGaR:
 ```
 conda activate r2r2r_sugar
-python dependencies/SuGaR/full_train_pipeline.py -s /home/lifelong/code_release/realrenderreal/outputs/cardboard_box/state_rigid_20250418_205353
+python dependencies/SuGaR/full_train_pipeline.py -s /home/<user>/realrenderreal/outputs/cardboard_box/state_rigid_20250418_205353
 ```
 
 After creating the mesh the normals may not be correct and the grasps generated initially from RSRD might not be the best. We refine these by running:
 
 ```
 conda activate r2r2r_rsrd
-python dependencies/rsrd/scripts/dev_grasp.py --dig-config /home/lifelong/code_release/realrenderreal/outputs/cardboard_box/dig/2025-04-18_204749/config.yml
+python dependencies/rsrd/scripts/dev_grasp.py --dig-config /home/<user>/realrenderreal/outputs/cardboard_box/dig/2025-04-18_204749/config.yml
 ```
 This will produce a mesh with updated normals called `<mesh_name>_fixed_normals_centered.obj` and generate a new `track` folder. Ensure that the `track` folder is named just `track`.
 
