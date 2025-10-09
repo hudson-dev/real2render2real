@@ -14,5 +14,6 @@ uv pip install viser[examples]
 uv pip install -U "jax[cuda12]"==0.5.3
 cd ..
 uv pip install -e trajgen
+uv pip install -e rsrd/dependencies/jaxmp/
 cd ..
 uv pip install -e .
