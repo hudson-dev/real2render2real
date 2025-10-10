@@ -83,14 +83,14 @@ Set up the conda environment for running SuGaR by following the steps in [env_3d
 Training SuGaR:
 ```
 conda activate r2r2r_sugar
-python dependencies/SuGaR/full_train_pipeline.py -s /home/<user>/realrenderreal/outputs/cardboard_box/state_rigid_20250418_205353
+python dependencies/SuGaR/full_train_pipeline.py -s /home/<user>/real2render2real/outputs/cardboard_box/state_rigid_20250418_205353
 ```
 
 After creating the mesh the normals may not be correct and the grasps generated initially from RSRD might not be the best. We refine these by running:
 
 ```
 conda activate r2r2r_rsrd
-python dependencies/rsrd/scripts/dev_grasp.py --dig-config /home/<user>/realrenderreal/outputs/cardboard_box/dig/2025-04-18_204749/config.yml
+python dependencies/rsrd/scripts/dev_grasp.py --dig-config /home/<user>/real2render2real/outputs/cardboard_box/dig/2025-04-18_204749/config.yml
 ```
 This will produce a mesh with updated normals called `<mesh_name>_fixed_normals_centered.obj` and generate a new `track` folder. Ensure that the `track` folder is named just `track`.
 
