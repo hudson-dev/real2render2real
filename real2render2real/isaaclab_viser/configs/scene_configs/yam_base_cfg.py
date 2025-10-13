@@ -18,10 +18,12 @@ data_dir = os.path.join(dir_path, "../../../../data")
 ##
 # Pre-defined configs
 ##
-from isaaclab_assets import FRANKA_PANDA_HIGH_PD_CFG  # isort:skip
+from real2render2real.isaaclab_viser.configs.articulation_configs.yumi_cfg_diffIK import (
+    YUMI_CFG
+)
 
 @configclass
-class FrankaBaseCfg(InteractiveSceneCfg):
+class YumiBaseCfg(InteractiveSceneCfg):
     """Design the scene with sensors on the robot."""
     #wall
     # wall = AssetBaseCfg(
@@ -48,11 +50,11 @@ class FrankaBaseCfg(InteractiveSceneCfg):
                     disable_gravity=False,
                 ),
             ),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.2, 0.0, -0.057)),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.2, 0.0, 0.0)),
     )
 
     # robot
-    robot: ArticulationCfg = FRANKA_PANDA_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = YUMI_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # sensors
     viewport_camera = MultiTiledCameraCfg( # INCLUDE THIS IN ALL CUSTOM CONFIGS TO LINK WITH A VISER VIEWPORT
@@ -61,16 +63,12 @@ class FrankaBaseCfg(InteractiveSceneCfg):
         # (For batched rendering of multiple cameras per environment)
         # height=270,
         # width=480,
-
         height=720,
         width=1280,
         data_types=["rgb"],
         spawn=sim_utils.PinholeCameraCfg.from_intrinsic_matrix(
-            # intrinsic_matrix = [196.52268219, 0, 242.82451629, 0, 196.52268219, 137.87061309, 0, 0, 1], # ZED 2 480x270 Intrinsics
+            # intrinsic_matrix = [278.09599369, 0, 480/2, 0, 278.09599369, 270/2, 0, 0, 1], # for 480x270
             intrinsic_matrix = [278.09599369*3, 0, 1280/2, 0, 278.09599369*3, 720/2, 0, 0, 1], # for 1280x720
-            # height=720,
-            # width=480,
-
             height=720,
             width=1280,
             clipping_range=(0.01, 20),
@@ -91,7 +89,7 @@ class FrankaBaseCfg(InteractiveSceneCfg):
     dome_light2 = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Light2",
         spawn=sim_utils.CylinderLightCfg(
-            intensity=500.0,
+            intensity=1003.0,
             radius=1.0,
             ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=(0.46, -0.64, 1.0)),
@@ -100,7 +98,7 @@ class FrankaBaseCfg(InteractiveSceneCfg):
     dome_light3 = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Light3",
         spawn=sim_utils.CylinderLightCfg(
-            intensity=500.0,
+            intensity=1003.0,
             radius=1.0,
             ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=(0.46, 0.4, 1.0)),
@@ -111,7 +109,7 @@ class FrankaBaseCfg(InteractiveSceneCfg):
     dome_light = AssetBaseCfg(
         prim_path="/World/Light",
         spawn=sim_utils.DomeLightCfg(
-            intensity=600.0,
+            intensity=750.0,
             texture_file=f"{data_dir}/assets/skyboxes/12_9_2024_BWW.jpg",
             ),
     )

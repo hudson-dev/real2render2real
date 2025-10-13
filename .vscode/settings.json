@@ -1,0 +1,7 @@
+{
+  "cmake.sourceDirectory": "/mnt/spare-ssd/hudsonssd/development/real2render2real/dependencies/SuGaR/gaussian_splatting/SIBR_viewers/src/projects/dataset_tools/preprocess",
+  "python.analysis.extraPaths": [
+    "dependencies/IsaacLab/source/isaaclab/isaaclab",
+    "dependencies/trajgen/trajgen"
+  ]
+}
