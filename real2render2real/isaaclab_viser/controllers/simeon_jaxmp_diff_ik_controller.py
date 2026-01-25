@@ -122,6 +122,66 @@ class JaxMPBatchedController:
         
         self.base_mask, self.target_mask = self.get_freeze_masks()
         self.ConstrainedSE3Var = BatchedRobotFactors.get_constrained_se3(self.base_mask)
+
+        # Simeon Added # 1. Initialize TCP offsets (identity by default)
+        self.tcp_offsets = onp.zeros((self.num_ees, 7))
+        self.tcp_offsets[:, 3] = 1.0  # Set wxyz to [1,0,0,0] (identity rotation)
+        self.use_tcp_offset = False  # Toggle to enable/disable
+
+    # 2. Add the apply_tcp_offset method to your class:
+    def apply_tcp_offset(self, target_poses: onp.ndarray, tcp_offsets: onp.ndarray) -> onp.ndarray:
+        """
+        Apply TCP offsets to target poses using SE3 composition.
+        
+        Args:
+            target_poses: (n_envs, n_targets, 7) array in xyz_wxyz format
+            tcp_offsets: (n_targets, 7) array in xyz_wxyz format
+        
+        Returns:
+            Combined poses in xyz_wxyz format (n_envs, n_targets, 7)
+        """
+        # Convert xyz_wxyz to wxyz_xyz for jaxlie
+        target_xyz = target_poses[..., :3]
+        target_wxyz = target_poses[..., 3:]
+        target_wxyz_xyz = jnp.concatenate([target_wxyz, target_xyz], axis=-1)
+        
+        # Broadcast tcp_offsets to match batch size
+        if tcp_offsets.ndim == 2:
+            tcp_offsets = jnp.tile(tcp_offsets[None, :, :], (target_poses.shape[0], 1, 1))
+        
+        # Convert tcp offsets from xyz_wxyz to wxyz_xyz
+        offset_xyz = tcp_offsets[..., :3]
+        offset_wxyz = tcp_offsets[..., 3:]
+        offset_wxyz_xyz = jnp.concatenate([offset_wxyz, offset_xyz], axis=-1)
+        
+        # Create SE3 objects and compose
+        target_se3s = jaxlie.SE3(target_wxyz_xyz)
+        offset_se3s = jaxlie.SE3(offset_wxyz_xyz)
+        combined_se3s = target_se3s @ offset_se3s #.inverse()
+        
+        # Convert back to xyz_wxyz format
+        combined_wxyz_xyz = combined_se3s.wxyz_xyz
+        combined_wxyz = combined_wxyz_xyz[..., :4]
+        combined_xyz = combined_wxyz_xyz[..., 4:]
+        combined_xyz_wxyz = jnp.concatenate([combined_xyz, combined_wxyz], axis=-1)
+        
+        return onp.array(combined_xyz_wxyz)
+
+
+    # 3. Add a setter method for convenience:
+    def set_tcp_offsets(self, offsets: onp.ndarray, enable: bool = True):
+        """
+        Set TCP offsets for end effectors.
+        
+        Args:
+            offsets: (n_targets, 7) array in xyz_wxyz format
+            enable: Whether to enable TCP offset application
+        """
+        assert offsets.shape == (self.num_ees, 7), \
+            f"Expected shape ({self.num_ees}, 7), got {offsets.shape}"
+        self.tcp_offsets = offsets
+        self.use_tcp_offset = enable
+        logger.info(f"TCP offsets set. Enabled: {enable}")
     
     def _setup_visualization(self):
         """Setup basic visualization elements."""
@@ -305,16 +365,35 @@ class JaxMPBatchedController:
                 self.kin.joint_names.index(self.target_names[i]) for i in range(self.num_ees)
             ]
         )
+        temp_pos = target_poses[:, :, :3]
+        temp_quat = target_poses[:, :, 3:]
+        
+        # Apply TCP offset if enabled
+        if self.use_tcp_offset:
+            target_poses_xyz_wxyz = jnp.concatenate([temp_pos, temp_quat], axis=-1)
+            target_poses_xyz_wxyz = self.apply_tcp_offset(
+                onp.array(target_poses_xyz_wxyz), 
+                self.tcp_offsets
+            )
+            temp_pos = target_poses_xyz_wxyz[:, :, :3]
+            temp_quat = target_poses_xyz_wxyz[:, :, 3:]
+        
+        target_poses = jnp.concatenate([temp_quat, temp_pos], axis=-1)
+        target_se3s = jaxlie.SE3(jnp.array(target_poses))
+        
+        ik_weight = jnp.array([self.pos_weight] * 3 + [self.rot_weight] * 3)
+        ik_weight = ik_weight * self.target_mask
+
         if self.setup_viser:
             if self.num_ees == 2:
-                self.transform_handles['left'].frame.position = target_poses[self.env, 0, :3]
-                self.transform_handles['left'].frame.wxyz = target_poses[self.env, 0, 3:]
-                
-                self.transform_handles['right'].frame.position = target_poses[self.env, 1, :3]
-                self.transform_handles['right'].frame.wxyz = target_poses[self.env, 1, 3:]
+                self.transform_handles['left'].frame.position = temp_pos[self.env, 0]
+                self.transform_handles['left'].frame.wxyz = temp_quat[self.env, 0]
+
+                self.transform_handles['right'].frame.position = temp_pos[self.env, 1]
+                self.transform_handles['right'].frame.wxyz = temp_quat[self.env, 1]
             elif self.num_ees == 1:
-                self.transform_handles['ee'].frame.position = target_poses[self.env, 0, :3]
-                self.transform_handles['ee'].frame.wxyz = target_poses[self.env, 0, 3:]
+                self.transform_handles['ee'].frame.position = temp_pos[self.env, 0]
+                self.transform_handles['ee'].frame.wxyz = temp_quat[self.env, 0]
             else:
                 raise ValueError(f"num_ees must be 1 or 2, got {self.num_ees}")
                 
@@ -322,16 +401,16 @@ class JaxMPBatchedController:
         if not self.has_jitted:
             start_time = time.time()
             
-        temp_pos = target_poses[:, :, :3]
-        temp_quat = target_poses[:, :, 3:]
-        target_poses = jnp.concatenate([temp_quat, temp_pos], axis=-1)
+        # temp_pos = target_poses[:, :, :3]
+        # temp_quat = target_poses[:, :, 3:]
+        # target_poses = jnp.concatenate([temp_quat, temp_pos], axis=-1)
         
-        target_se3s = jaxlie.SE3(jnp.array(target_poses))
+        # target_se3s = jaxlie.SE3(jnp.array(target_poses))
 
-        #Simeon TODO from Justin: Add rot and translation transforms to offset tcp 
+        # #Simeon TODO from Justin: Add rot and translation transforms to offset tcp 
         
-        ik_weight = jnp.array([self.pos_weight] * 3 + [self.rot_weight] * 3)
-        ik_weight = ik_weight * self.target_mask
+        # ik_weight = jnp.array([self.pos_weight] * 3 + [self.rot_weight] * 3)
+        # ik_weight = ik_weight * self.target_mask
         
         if self.smooth:
             if hasattr(self, "joints_all"):

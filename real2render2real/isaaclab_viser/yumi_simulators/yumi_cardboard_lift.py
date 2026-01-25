@@ -130,7 +130,8 @@ class CardboardLift(IsaacLabViser):
     def __init__(self, *args, **kwargs):
         self.debug_marker_vis = False
         # TODO: Change to your own path
-        self.dig_config_path = Path(f'{outputs_dir}/cardboard_box/dig/2025-04-18_204749/config.yml')
+        # self.dig_config_path = Path(f'{outputs_dir}/cardboard_box/dig/2025-04-18_204749/config.yml')
+        self.dig_config_path = Path('/mnt/spare-ssd/hudsonssd/development/captures/videos_v4/outputs/box/dig/2025-12-19_231017/config.yml')
         self.ns_output_dir = self.dig_config_path.parent.parent.parent
         super().__init__(*args, **kwargs)
         
@@ -236,6 +237,33 @@ class CardboardLift(IsaacLabViser):
         if len(self.grasped_idxs) > 2:
             raise ValueError("More than two simultaneously grasped parts found")
     
+    # def _load_grasp_data(self):
+    #     print("ns_output_dir:", self.ns_output_dir)
+
+    #     rigid_state_dirs = sorted(
+    #         [p for p in self.ns_output_dir.glob("state_rigid_*") if p.is_dir()]
+    #     )
+
+    #     print("found rigid_state_dirs:")
+    #     for p in rigid_state_dirs:
+    #         print(" -", p.name)
+
+    #     self.grasped_idxs = []
+    #     self.grasp_data = []
+
+    #     for idx, rigid_state_dir in enumerate(rigid_state_dirs):
+    #         grasp_path = rigid_state_dir / "grasps.txt"
+    #         print("checking:", grasp_path, "exists:", grasp_path.exists())
+    #         if grasp_path.exists():
+    #             raw = grasp_path.read_text()
+    #             g = json.loads(raw)
+    #             print("  loaded type:", type(g), "len:", (len(g) if hasattr(g, "__len__") else None))
+    #             self.grasped_idxs.append(idx)
+    #             self.grasp_data.append(g)
+
+    #     print("FINAL grasped_idxs:", self.grasped_idxs)
+    #     print("FINAL grasp_data lens:", [len(x) for x in self.grasp_data])
+
     def _setup_viser_gui(self):
         """Setup viser GUI elements"""
         super()._setup_viser_gui()
@@ -337,11 +365,17 @@ class CardboardLift(IsaacLabViser):
                             self.camera_manager.buffers[buffer_key].append(deepcopy(frustum_data)) # TODO: Check if removing deepcopy breaks things
 
                     else:
+                        # xyzs = []
+                        # wxyzs = []
+                        # for camera_frustum in self.camera_manager.frustums:
+                        #     xyzs.append(camera_frustum.position)
+                        #     wxyzs.append(camera_frustum.wxyz)
                         xyzs = []
                         wxyzs = []
-                        for camera_frustum in self.camera_manager.frustums:
+                        for camera_frustum, camera_frustum_name in self.camera_manager.frustums:
                             xyzs.append(camera_frustum.position)
                             wxyzs.append(camera_frustum.wxyz)
+
                         for i in range(self.isaac_viewport_camera.cfg.cams_per_env-len(xyzs)): # Fill up with shape[0]==cams_per_env since a pose must be given every set_world_pose call for every camera
                             xyzs.append(xyzs[-1])
                             wxyzs.append(wxyzs[-1])
@@ -354,7 +388,10 @@ class CardboardLift(IsaacLabViser):
                         for key in self.isaac_viewport_camera.data.output.keys():
                             cam_out[key] = self.isaac_viewport_camera.data.output[key][indices]
                         
-                        for idx, frustum in enumerate(self.camera_manager.frustums):
+                        # for idx, frustum in enumerate(self.camera_manager.frustums):
+                        for idx, item in enumerate(self.camera_manager.frustums):
+                            frustum, frustum_name = item if isinstance(item, tuple) else (item, item.name)
+
                             frustum_data = {}
                             for key in cam_out.keys():
                                 frustum_data[key] = cam_out[key][idx::len(self.camera_manager.frustums)]

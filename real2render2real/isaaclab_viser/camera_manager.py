@@ -64,7 +64,9 @@ class CameraManager:
         
         # Initialize buffers for all cameras
         for frustum in self.frustums:
-            self.buffers[frustum.name[1:]] = deque(maxlen=1)
+            print("FRUSTUM: ", frustum)
+            print(frustum[1][1:])
+            self.buffers[frustum[1][1:]] = deque(maxlen=1)
             
         if len(self.frustums) == self.max_cams_per_env:
                 self.add_camera_button.disabled = True
@@ -129,7 +131,7 @@ class CameraManager:
         self.used_ids.add(camera_id)
         
         frustum = self.viser_server.scene.add_camera_frustum(
-            f"/camera_{camera_id}",
+            name=f"/camera_{camera_id}",
             fov=2 * np.arctan((camera_params['horizontal_aperture']/2) / camera_params['focal_length']),
             aspect=camera_params['width'] / camera_params['height'],
             position=position,
@@ -140,8 +142,9 @@ class CameraManager:
         # Add click callback
         frustum.on_click(self.create_click_handler(frustum))
 
-        self.frustums.append(frustum)
-        self.buffers[frustum.name[1:]] = deque(maxlen=1)
+        self.frustums.append((frustum, f"/camera_{camera_id}"))
+        # self.buffers[frustum.name[1:]] = deque(maxlen=1)
+        self.buffers[f"camera_{camera_id}"] = deque(maxlen=1)
         return frustum
     
     def update_camera_selector(self):
@@ -160,7 +163,7 @@ class CameraManager:
                     [self.frustums[i].name[1:] for i in range(len(self.frustums))],
                     initial_value=self.frustums[0].name[1:]
                 )
-            self.render_cam = self.frustums[0].name[1:]
+            self.render_cam = self.frustums[0][0][1:]
             @self.camera_selector.on_update
             def _(_) -> None:
                 self.render_cam = self.camera_selector.value

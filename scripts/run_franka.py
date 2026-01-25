@@ -53,11 +53,11 @@ def main():
     # scene_config = YumiDrawerOpenCfg(num_envs=2, env_spacing=80.0)
     # scene_config = YumiTigerPickR2R2RCfg(num_envs=2, env_spacing=80.0)
     # scene_config = YumiCardboardPickupCfg(num_envs=2, env_spacing=80.0)
-    # scene_config = FrankaCoffeeMakerCfg(num_envs=2, env_spacing=1.5)
+    scene_config = FrankaCoffeeMakerCfg(num_envs=2, env_spacing=1.5)
     # scene_config = YamFaucetCfg(num_envs=2, env_spacing=80.0)
-    scene_config = YamCoffeeMakerCfg(num_envs=1, env_spacing=80.0)
+    # scene_config = YamCoffeeMakerCfg(num_envs=2, env_spacing=80.0)
 
-    output_dir = os.path.join(output_data_dir, "yam_coffee_maker")
+    output_dir = os.path.join(output_data_dir, "franka_coffee_maker")
     
     ### Robot URDFs ###
     
@@ -65,15 +65,13 @@ def main():
     #     'robot': Path(f'{data_dir}/yumi_description/urdf/yumi.urdf'),
     # }
     
-    # urdf_path = {
-    #     'robot': Path(f'{data_dir}/franka_description/urdfs/fr3_franka_hand.urdf'),
-    # }
-
     urdf_path = {
-        # 'robot': Path(f'{data_dir}/yam_description_new/urdf/yam.urdf'),
-        'robot': Path(f'{data_dir}/yam_description_new/urdf/modified_i2rt_yam_fix_limits.urdf'),
-        # 'robot': Path(f'{data_dir}/yam_description_new/urdf/modified_i2rt_yam.urdf'),
+        'robot': Path(f'{data_dir}/franka_description/urdfs/fr3_franka_hand.urdf'),
     }
+
+    # urdf_path = {
+    #     'robot': Path(f'{data_dir}/yam_description_new/urdf/yam.urdf'),
+    # }
     
     
     ### Simulators ###
@@ -117,12 +115,12 @@ def main():
     #     output_dir = output_dir
     # )
     
-    # FrankaCoffeeMaker(
-    #     simulation_app,
-    #     scene_config,
-    #     urdf_path = urdf_path,
-    #     save_data=True,
-    #     output_dir = output_dir)
+    FrankaCoffeeMaker(
+        simulation_app,
+        scene_config,
+        urdf_path = urdf_path,
+        save_data=True,
+        output_dir = output_dir)
 
     # YamFaucet(
     #     simulation_app,
@@ -132,13 +130,13 @@ def main():
     #     output_dir = output_dir
     # )
 
-    YamCoffeeMaker(
-        simulation_app,
-        scene_config,
-        urdf_path = urdf_path,
-        save_data=True,
-        output_dir = output_dir
-    )
+    # YamCoffeeMaker(
+    #     simulation_app,
+    #     scene_config,
+    #     urdf_path = urdf_path,
+    #     save_data=True,
+    #     output_dir = output_dir
+    # )
     
     
     # Using robot USD file in the scene_config and loading the same URDF separately speeds up IsaacLab init 

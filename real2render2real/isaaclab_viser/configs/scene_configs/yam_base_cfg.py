@@ -18,12 +18,13 @@ data_dir = os.path.join(dir_path, "../../../../data")
 ##
 # Pre-defined configs
 ##
-from real2render2real.isaaclab_viser.configs.articulation_configs.yumi_cfg_diffIK import (
-    YUMI_CFG
+# TODO: still need to figure out yam joint and actuators
+from real2render2real.isaaclab_viser.configs.articulation_configs.yam_cfg_diffIK import (
+    YAM_CFG
 )
 
 @configclass
-class YumiBaseCfg(InteractiveSceneCfg):
+class YamBaseCfg(InteractiveSceneCfg):
     """Design the scene with sensors on the robot."""
     #wall
     # wall = AssetBaseCfg(
@@ -36,6 +37,7 @@ class YumiBaseCfg(InteractiveSceneCfg):
     # )
 
     # table
+    #TODO: replace table usd with yam table (which is white and doesn't have holes)
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         spawn=sim_utils.UsdFileCfg(
@@ -54,7 +56,9 @@ class YumiBaseCfg(InteractiveSceneCfg):
     )
 
     # robot
-    robot: ArticulationCfg = YUMI_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = YAM_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+
+    #Found multiple '[Usd.Prim(</World/envs/env_0/Robot/yam/worldBody>), Usd.Prim(</World/envs/env_0/Robot/yam/arm/arm>)]' under '/World/envs/env_0/Robot'. Please ensure that there is only one articulation in the prim path tree.
 
     # sensors
     viewport_camera = MultiTiledCameraCfg( # INCLUDE THIS IN ALL CUSTOM CONFIGS TO LINK WITH A VISER VIEWPORT
@@ -82,6 +86,20 @@ class YumiBaseCfg(InteractiveSceneCfg):
     #     width=320,
     #     data_types=["rgb", "depth"],
     #     spawn=sim_utils.PinholeCameraCfg(),
+    #     offset=CameraCfg.OffsetCfg(pos=(0.0, 0.05, 0.0), rot=(1, 0, 0, 0), convention="ros"),
+    #     )
+
+    # wrist_camera = TiledCameraCfg( # intrinsics for oak-1 OV9782 wrist cam
+    #     prim_path="{ENV_REGEX_NS}/Robot/gripper_l_base/wrist_cam",
+    #     height=800,
+    #     width=1280,
+    #     data_types=["rgb"],
+    #     spawn=sim_utils.PinholeCameraCfg.from_intrinsic_matrix(
+    #         intrinsic_matrix = [783.33333, 0, 1280/2, 0, 783.33333, 800/2, 0, 0, 1], # for 1280x800
+    #         height=800,
+    #         width=1280,
+    #         clipping_range=(0.01, 20), #might need to change lower clipping distance to 0.5m
+    #     ),
     #     offset=CameraCfg.OffsetCfg(pos=(0.0, 0.05, 0.0), rot=(1, 0, 0, 0), convention="ros"),
     #     )
 

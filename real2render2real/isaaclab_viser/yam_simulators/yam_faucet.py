@@ -28,15 +28,15 @@ outputs_dir = os.path.join(dir_path, "../../../outputs")
 class ManipulationConfig:
     """Configuration for manipulation phases"""
     setup_phase_steps: int = 35  # End of initial setup, begin trajectory
-    grasp_phase_steps: int = 90  # Close Gripper at step
+    grasp_phase_steps: int = 120  # Close Gripper at step
     release_offset_steps: int = 30  # Steps in trajectory after release
-    resampled_part_deltas_length: int = None
+    resampled_part_deltas_length: int = None #increase total number of steps if using resampled trajectory
     ee_retracts: Dict[str, float] = None
     resampled: bool = False
     
     def __post_init__(self):
         self.ee_retracts = {
-            'start': -0.085,
+            'start': -0.1,
             'grasp': -0.005,
             'release': -0.1
         }
@@ -74,7 +74,6 @@ class ManipulationStateMachine:
         self.config = config
         self.gripper_closed = False
         self.ee_goal_offset = [0.0, 0.0, 0.0, 0, -1, 0, 0]
-        self.ee_rand_goal_offset = [0.0, 0.0]
         
     def update(self, count: int):
         """Update state machine based on current count"""
@@ -93,16 +92,7 @@ class ManipulationStateMachine:
                 self.config.ee_retracts['grasp']
             )
             
-            # Apply exponential decay to make ee_rand_goal_offset approach zero faster than linear
-            if self.ee_rand_goal_offset[0] != 0.0:
-                self.ee_rand_goal_offset[0] *= (0.95 ** (1.0 / (count - self.config.setup_phase_steps)))
-                self.ee_rand_goal_offset[1] *= (0.95 ** (1.0 / (count - self.config.setup_phase_steps)))
-                
-                self.ee_goal_offset[0] = self.ee_goal_offset[2] * self.ee_rand_goal_offset[0]/self.config.ee_retracts['start']
-                self.ee_goal_offset[1] = self.ee_goal_offset[2] * self.ee_rand_goal_offset[1]/self.config.ee_retracts['start']
-            
-            
-        if count > self.config.grasp_phase_steps - 6:
+        if count > self.config.grasp_phase_steps - 5:
             self.gripper_closed = True
             
         if count > self.config.release_phase_steps(self.config.resampled) + 3:
@@ -129,20 +119,13 @@ class ManipulationStateMachine:
         t = (count - start_count) / (end_count - start_count)
         t = t * t * (3 - 2 * t)  # Smoothstep interpolation
         return start_height + t * (end_height - start_height)
-    
-    
-    def _randomize_ee_pose_offset(self):
-            """Randomize end-effector pose offset"""
-            self.ee_rand_goal_offset = ((torch.rand((2,))*2-1)*0.07).tolist()
 
-class CoffeeMaker(IsaacLabViser):
+class Faucet(IsaacLabViser):
     def __init__(self, *args, **kwargs):
         self.debug_marker_vis = False
-        # TODO: Change to your own path
-        # self.dig_config_path = Path(f'{outputs_dir}/coffee_maker/dig/2025-03-18_154136/config.yml')
-        self.dig_config_path = Path(f'/mnt/spare-ssd/hudsonssd/development/captures/videos_v4/outputs/coffee_cup/dig/2025-12-20_015524/config.yml')
+        # TODO: remember to change to your own config path!
+        self.dig_config_path = Path(f'{outputs_dir}/faucet/dig/2025-04-11_201037/config.yml')
         self.ns_output_dir = self.dig_config_path.parent.parent.parent
-        # self.ns_output_dir = Path(f'/mnt/spare-ssd/hudsonssd/development/captures/videos_v4/outputs/coffee_maker/')
         super().__init__(*args, **kwargs)
         
         self.load_track_data()
@@ -150,7 +133,7 @@ class CoffeeMaker(IsaacLabViser):
         self.state_machine.config.set_part_deltas_length(self.part_deltas.shape[0])
         self.grasp_perturb = None
         self.render_wrist_cameras = False
-        self.grasped_obj_loc_augment = True
+        self.grasped_obj_loc_augment = False
         self.run_simulator()
     
     def run_simulator(self):
@@ -211,8 +194,8 @@ class CoffeeMaker(IsaacLabViser):
     def load_track_data(self):
         """Load trajectory and grasp data"""
         track_data_path = self.ns_output_dir / "track/keyframes.txt"
+        init_p2o_path = self.ns_output_dir / "init_p2o.txt"
         dpt_json = self.dig_config_path.parent / 'dataparser_transforms.json'
-        # dpt_json = self.dig_config_path.parent / '2025-11-24_163813/dataparser_transforms.json' # edited path
         
         # Load scale and transforms
         dpt = json.loads(dpt_json.read_text())
@@ -224,21 +207,23 @@ class CoffeeMaker(IsaacLabViser):
         self.T_objreg_objinit = torch.tensor(data["T_objreg_objinit"]).cuda()
         self.T_world_objinit = torch.tensor(data["T_world_objinit"]).cuda()
         
+        # Load init_p2o data
+        init_p2o_str = init_p2o_path.read_text().strip().split('\n')
+        init_p2o_list = [eval(line) for line in init_p2o_str]
+        self.init_p2o = torch.tensor(init_p2o_list).cuda()
+        
         # Load grasp data
         self._load_grasp_data()
         
     def _load_grasp_data(self):
         """Load grasp data from rigid state directories"""
-        rigid_state_dirs = sorted(
-            [p for p in self.ns_output_dir.glob("state_rigid_*") if p.is_dir()],
-            key=lambda x: x.stem.split('_')[3]
-        )
+        subpart_dirs = sorted([p for p in self.ns_output_dir.glob("*_sub_part_*") if p.is_dir()], key=lambda x: x.stem)
         
         self.grasped_idxs = []
         self.grasp_data = []
         
-        for idx, rigid_state_dir in enumerate(rigid_state_dirs):
-            grasp_files = list(rigid_state_dir.glob("grasps.txt"))
+        for idx, subpart_dir in enumerate(subpart_dirs):
+            grasp_files = list(subpart_dir.glob("grasps.txt"))
             if grasp_files:
                 self.grasped_idxs.append(idx)
                 self.grasp_data.append(json.loads(grasp_files[0].read_text()))
@@ -248,14 +233,12 @@ class CoffeeMaker(IsaacLabViser):
         if len(self.grasped_idxs) > 2:
             raise ValueError("More than two simultaneously grasped parts found")
     
-    # TODO FIGURE OUT WHY THIS IS MAKING THE TRANSFORMS
     def _setup_viser_gui(self):
         """Setup viser GUI elements"""
         super()._setup_viser_gui()
         # Add object frame to viser
         self.rigid_objects_viser_frame = []
         for name, rigid_object in self.scene.rigid_objects.items():
-            print(f"***************Adding rigid object frame for: {name} with wxyz {rigid_object.data.default_root_state[self.env][3:7].cpu().detach().numpy()} and position {rigid_object.data.default_root_state[self.env][:3].cpu().detach().numpy()}")
             self.rigid_objects_viser_frame.append(
                 self.viser_server.scene.add_frame(
                     name, 
@@ -305,7 +288,6 @@ class CoffeeMaker(IsaacLabViser):
             xyz = torch.tensor(self.client.camera.position).unsqueeze(0).repeat(repeat_n, 1)
             xyz = torch.add(xyz, self.scene.env_origins.cpu().repeat_interleave(repeat_n//self.scene_config.num_envs, dim=0))
             wxyz = torch.tensor(self.client.camera.wxyz).unsqueeze(0).repeat(repeat_n, 1)
-            
             self.isaac_viewport_camera.set_world_poses(xyz, wxyz, convention="ros")
             single_cam_ids = [self.isaac_viewport_camera.cfg.cams_per_env*i for i in list(range(self.scene_config.num_envs))]
             cam_out = {}
@@ -342,7 +324,7 @@ class CoffeeMaker(IsaacLabViser):
                         for key in self.isaac_viewport_camera.data.output.keys():
                             cam_out[key] = self.isaac_viewport_camera.data.output[key][indices]
 
-                        for idx, (frustum, frustum_name) in enumerate(self.camera_manager.frustums):
+                        for idx, frustum in enumerate(self.camera_manager.frustums):
                             frustum_data = {}
                             for key in cam_out.keys():
                                 frustum_data[key] = cam_out[key][idx::len(self.camera_manager.frustums)]
@@ -354,7 +336,7 @@ class CoffeeMaker(IsaacLabViser):
                     else:
                         xyzs = []
                         wxyzs = []
-                        for camera_frustum, camera_frustum_name in self.camera_manager.frustums:
+                        for camera_frustum in self.camera_manager.frustums:
                             xyzs.append(camera_frustum.position)
                             wxyzs.append(camera_frustum.wxyz)
                         for i in range(self.isaac_viewport_camera.cfg.cams_per_env-len(xyzs)): # Fill up with shape[0]==cams_per_env since a pose must be given every set_world_pose call for every camera
@@ -368,12 +350,12 @@ class CoffeeMaker(IsaacLabViser):
                         cam_out = {}
                         for key in self.isaac_viewport_camera.data.output.keys():
                             cam_out[key] = self.isaac_viewport_camera.data.output[key][indices]
-
-                        for idx, (frustum, frustum_name) in enumerate(self.camera_manager.frustums):
+                        
+                        for idx, frustum in enumerate(self.camera_manager.frustums):
                             frustum_data = {}
                             for key in cam_out.keys():
                                 frustum_data[key] = cam_out[key][idx::len(self.camera_manager.frustums)]
-                            buffer_key = frustum_name[1:]
+                            buffer_key = frustum.name[1:]
                             if buffer_key not in self.camera_manager.buffers.keys():
                                 self.camera_manager.buffers[buffer_key] = deque(maxlen=1)
                             self.camera_manager.buffers[buffer_key].append(deepcopy(frustum_data)) # TODO: Check if removing deepcopy breaks things
@@ -447,10 +429,6 @@ class CoffeeMaker(IsaacLabViser):
         self.scene.reset()
         self.controller.reset()
         
-        # self.state_machine._randomize_ee_pose_offset()
-        self.randomize_skybox()
-        # self.randomize_table()
-        
         self.randomize_lighting()
         self.randomize_viewaug()
         self.randomize_grasp_rot()
@@ -472,10 +450,12 @@ class CoffeeMaker(IsaacLabViser):
 
     def _reset_object_state(self):
         """Reset objects with randomization"""
-        random_xyz = (torch.rand_like(self.scene.env_origins) * 2 - 1) * 0.08
-        random_xyz[:, 2] = 0.0
+        random_xyz = torch.randn_like(self.scene.env_origins) * 0.06
         
-        z_rot = torch.rand((self.scene.num_envs,)) * 0.65 + onp.pi/2 - 0.5 #* 0.8 + onp.pi/2 - 0.4
+        random_xyz[:, 0] -= 0.1
+        random_xyz[:, 2] = -0.07
+        
+        z_rot = 0.5 - onp.pi/2 + torch.rand((self.scene.num_envs,)) * 0.02 
         
         random_z_rot = tf.SO3.from_z_radians(
             torch.tensor(z_rot, device=self.scene.env_origins.device)
@@ -483,36 +463,9 @@ class CoffeeMaker(IsaacLabViser):
             
         self.parts_init_state = {}
         for group_idx, rigid_object in enumerate(self.scene.rigid_objects.values()):
-            base_transform = (tf.SE3(self.T_world_objinit[0:1]) @ 
-                            tf.SE3(self.T_objreg_objinit[0:1]))
-            if self.grasped_obj_loc_augment and group_idx in self.grasped_idxs: # Object init randomization + Object trajectory interpolation
-                new_starts = generate_directional_starts(self.part_deltas[:, group_idx], self.scene.num_envs, magnitude=0.14, direction_weight=0.7, perp_variation=0.45)
-                
-                self.new_trajs = traj_interp_batch(
-                    traj=self.part_deltas[:, group_idx].cpu().detach().numpy(),
-                    new_starts=new_starts.cpu().detach().numpy(),
-                    proportion=0.6
-                )
 
-                self.new_trajs = generate_uniform_control_points_batch(
-                    self.new_trajs,
-                    proportion=1.1, # 10% more control points than original
-                    tension=0.1      
-                )
-
-                self.state_machine.config.set_resampled_part_deltas_length(self.new_trajs.shape[1])
-                                
-                self.new_starts = torch.tensor(self.new_trajs[:, 0]).to(self.T_world_objinit.device) 
-
-
-            current_transform = (tf.SE3(wxyz_xyz=self.T_world_objinit[group_idx]) @ 
-                            tf.SE3(wxyz_xyz=self.T_objreg_objinit[group_idx]))
-            p2o_transform = base_transform.inverse() @ current_transform
-            p2o_7vec = tf.SE3(
-                p2o_transform.wxyz_xyz[0].unsqueeze(0).repeat(
-                    self.scene.num_envs, 1
-                ) 
-            )
+            p2o_transform = tf.SE3(self.init_p2o[group_idx].unsqueeze(0))
+            p2o_7vec = tf.SE3(p2o_transform.wxyz_xyz[0].unsqueeze(0).repeat(self.scene.num_envs, 1))
             p2o_7vec.wxyz_xyz[:, 4:] /= self._scale
             
             part_inits = tf.SE3.from_rotation(random_z_rot) @ p2o_7vec
@@ -635,10 +588,10 @@ class CoffeeMaker(IsaacLabViser):
         rigid_object.update(self.sim.get_physics_dt())
         
         if count == self.state_machine.config.setup_phase_steps + 1:
-            # TODO: This is scuffed, check why it's not working or for now we can set all to right hand
+            # TODO: This is scuffed as hell, check why it's not working or for now we can set all to right hand
             # root_state_b = rigid_object.data.root_state_w[:, :3] + self.scene.env_origins
             # self.left_hand_envs = root_state_b[:, 1] > 0.8
-            self.left_hand_envs = torch.zeros((self.scene.num_envs,), dtype=bool, device=self.scene.env_origins.device)
+            self.left_hand_envs = torch.ones((self.scene.num_envs,), dtype=bool, device=self.scene.env_origins.device)
         
         # Calculate target poses
         target_poses = self._calculate_target_poses(count,
@@ -723,7 +676,7 @@ class CoffeeMaker(IsaacLabViser):
         """Check if joint positions are beyond limits and mark environments as failed if any limits are exceeded"""
         joint_pos = self.robot.data.joint_pos[:, self.robot_entity_cfg.joint_ids]
 
-        joint_pos_limits = self.robot.data.joint_pos_limits[:, self.robot_entity_cfg.joint_ids]
+        joint_pos_limits = self.robot.data.joint_limits[:, self.robot_entity_cfg.joint_ids]
         
         # Check if joint positions exceed lower or upper limits
         joint_pos_below_limit = joint_pos < joint_pos_limits[..., 0]  # Check lower bounds
@@ -853,21 +806,6 @@ class CoffeeMaker(IsaacLabViser):
         joint_pos = self.robot.data.joint_pos[:, self.robot_entity_cfg.joint_ids]
         joint_pos_des = torch.zeros_like(joint_pos, device=self.robot.device)
         joint_pos_des[:, 0:14] = torch.tensor(joint_desired)
-        
-        # Get current joint positions
-        current_joint_pos = self.robot.data.joint_pos[:, self.robot_entity_cfg.joint_ids]
-        
-        # For left-handed environments, keep right arm at current position
-        # For right-handed environments, keep left arm at current position
-        
-        # Create a mask for the joint indices of each arm (excluding grippers)
-        left_arm_indices = slice(0, 14, 2)
-        right_arm_indices = slice(1, 14, 2)
-
-        joint_pos_des[self.left_hand_envs, right_arm_indices] = current_joint_pos[self.left_hand_envs, right_arm_indices] #+ noise_right
-        
-        # For right-handed environments, replace left arm joint positions with current positions
-        joint_pos_des[~self.left_hand_envs, left_arm_indices] = current_joint_pos[~self.left_hand_envs, left_arm_indices] #+ noise_left
         
         # Handle gripper positions
         self._set_gripper_positions(joint_pos_des)

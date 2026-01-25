@@ -17,7 +17,7 @@ simulation_app = app_launcher.app
 
 import isaaclab.sim as sim_utils
 from isaaclab.sim.converters import UrdfConverter, UrdfConverterCfg, AssetConverterBaseCfg, AssetConverterBase
-import tyro
+# import tyro
 import os
 import omni.usd
 import omni.client
@@ -122,8 +122,9 @@ def convert_asset_instanceable(asset_usd_path, source_prim_path, save_as_path=No
 
 def main(path):
     
-    # urdf_to_usd(path)
-    convert_asset_instanceable(path, "/table2", save_as_path=path.replace('.usd', '_instanceable.usd'), create_xforms=True)
+    # urdf_to_usd("/mnt/spare-ssd/hudsonssd/Downloads/yam.urdf")
+    urdf_to_usd("data/yumi_description/urdf/yumi.urdf")
+    # convert_asset_instanceable(path, "/table2", save_as_path=path.replace('.usd', '_instanceable.usd'), create_xforms=True)
     
     
 if __name__ == "__main__":

@@ -136,6 +136,7 @@ class IsaacLabViser:
                 root_node_name="/base"
             )
         default_joint_pos_dict = {self.scene.articulations['robot'].joint_names[i]: self.scene.articulations['robot'].data.default_joint_pos[0][i].item() for i in range(len(self.scene.articulations['robot'].data.default_joint_pos[0]))} 
+        print("DEFAULT JOINT POS DICT:", default_joint_pos_dict)
         self.urdf_vis['robot'].update_cfg(default_joint_pos_dict)
         
         self.camera_manager = CameraManager(self.viser_server, self.scene)
@@ -283,18 +284,18 @@ class IsaacLabViser:
     def randomize_viewaug(self):
         if not hasattr(self, 'original_frustums'):
             self.original_frustums = {}
-            for frustum in self.camera_manager.frustums:
-                self.original_frustums[frustum.name] = np.array([*frustum.position, *frustum.wxyz])
-        
+            for frustum, frustum_name in self.camera_manager.frustums:
+                self.original_frustums[frustum_name] = np.array([*frustum.position, *frustum.wxyz])
+
         if hasattr(self.camera_manager, 'frustums'):
             if len(self.camera_manager.frustums) != len(self.original_frustums):
                 del self.original_frustums
                 return
-            
-            for frustum in self.camera_manager.frustums:
-                frustum.position = self.original_frustums[frustum.name][:3] + (np.random.rand(*frustum.position.shape) * 2 - 1) * 0.015 # * 0.01
-                frustum.wxyz = self.original_frustums[frustum.name][3:] + (np.random.rand(*frustum.wxyz.shape) * 2 - 1) * 0.008
-    
+
+            for frustum, frustum_name in self.camera_manager.frustums:
+                frustum.position = self.original_frustums[frustum_name][:3] + (np.random.rand(*frustum.position.shape) * 2 - 1) * 0.015 # * 0.01
+                frustum.wxyz = self.original_frustums[frustum_name][3:] + (np.random.rand(*frustum.wxyz.shape) * 2 - 1) * 0.008
+
     
     def randomize_skybox_rotation(self):
         angle_radians = np.random.rand() * 2 * np.pi

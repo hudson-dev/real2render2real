@@ -46,8 +46,10 @@ class YumiCoffeeMakerCfg(YumiBaseCfg):
     """Design the scene with sensors on the robot."""
     coffee_maker = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/coffee_maker",
+        # prim_path="{ENV_REGEX_NS}/coffee_maker_NEW",
         spawn=sim_utils.UsdFileCfg(
             usd_path=f"{data_dir}/assets/object_scans/coffee_maker/coffee_maker.usd",
+            # usd_path="/mnt/spare-ssd/hudsonssd/development/real2render2real/kiri_engine_meshes/usd_outputs/coffee_maker/coffee_maker.usd",
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     kinematic_enabled=True,
                     disable_gravity=True,
@@ -56,13 +58,14 @@ class YumiCoffeeMakerCfg(YumiBaseCfg):
                 collision_enabled=False,
                 ),
             ),
-        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.39, 0.1, 0.093)),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.39, 0.1, 0.093), rot=(0.7071, 0.0, 0.0, 0.7071)),
     )
     
     mug = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/mug",
-        spawn=sim_utils.UsdFileCfg(
+        spawn=sim_utils.UsdFileCfg(\
             usd_path=f"{data_dir}/assets/object_scans/mug/mug.usd",
+            # usd_path="/mnt/spare-ssd/hudsonssd/development/real2render2real/kiri_engine_meshes/usd_outputs/coffee_cup/coffee_cup.usd",
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     kinematic_enabled=True,
                     disable_gravity=True,
@@ -72,7 +75,7 @@ class YumiCoffeeMakerCfg(YumiBaseCfg):
                 ),
             ),
 
-        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.39, 0.1, 0.09)),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.39, 0.1, 0.09), rot=(0.7071, 0.0, 0.0, 0.7071)),
 
     )
 
@@ -218,7 +221,8 @@ class YumiCardboardPickupCfg(YumiBaseCfg):
     cardboard_box = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/cardboard_box",
         spawn=sim_utils.UsdFileCfg(
-            usd_path=f"{data_dir}/assets/object_scans/cardboard_box/cardboard_box.usd",
+            # usd_path=f"{data_dir}/assets/object_scans/cardboard_box/cardboard_box.usd",
+            usd_path="/mnt/spare-ssd/hudsonssd/development/captures/videos_v4/meshes/converted/NEW_box/NEW_box.usd",
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     kinematic_enabled=True,
                     disable_gravity=True,

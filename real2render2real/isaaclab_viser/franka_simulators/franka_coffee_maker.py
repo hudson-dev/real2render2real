@@ -86,8 +86,8 @@ class ManipulationStateMachine:
         if count > self.config.setup_phase_steps:
             self.ee_goal_offset[2] = self._interpolate_height(
                 count,
-                self.config.setup_phase_steps + 14,
-                self.config.grasp_phase_steps - 3,
+                self.config.setup_phase_steps + 14, #hold for 14 steps after setup
+                self.config.grasp_phase_steps - 3, #hold at end_height for 3 steps before grasp
                 self.config.ee_retracts['start'],
                 self.config.ee_retracts['grasp']
             )
@@ -98,7 +98,7 @@ class ManipulationStateMachine:
             self.ee_goal_offset[0] = self.ee_goal_offset[2] * self.ee_rand_goal_offset[0]/self.config.ee_retracts['start']
             self.ee_goal_offset[1] = self.ee_goal_offset[2] * self.ee_rand_goal_offset[1]/self.config.ee_retracts['start']
             
-            
+        # close gripper 4 steps before grasp phase ends
         if count > self.config.grasp_phase_steps - 4:
             self.gripper_closed = True
             
@@ -334,7 +334,7 @@ class CoffeeMaker(IsaacLabViser):
                         for key in self.isaac_viewport_camera.data.output.keys():
                             cam_out[key] = self.isaac_viewport_camera.data.output[key][indices]
 
-                        for idx, frustum in enumerate(self.camera_manager.frustums):
+                        for idx, (frustum, frustum_name) in enumerate(self.camera_manager.frustums):
                             frustum_data = {}
                             for key in cam_out.keys():
                                 frustum_data[key] = cam_out[key][idx::len(self.camera_manager.frustums)]
@@ -346,7 +346,7 @@ class CoffeeMaker(IsaacLabViser):
                     else:
                         xyzs = []
                         wxyzs = []
-                        for camera_frustum in self.camera_manager.frustums:
+                        for camera_frustum, camera_frustum_name in self.camera_manager.frustums:
                             xyzs.append(camera_frustum.position)
                             wxyzs.append(camera_frustum.wxyz)
                         for i in range(self.isaac_viewport_camera.cfg.cams_per_env-len(xyzs)): # Fill up with shape[0]==cams_per_env since a pose must be given every set_world_pose call for every camera
@@ -360,12 +360,12 @@ class CoffeeMaker(IsaacLabViser):
                         cam_out = {}
                         for key in self.isaac_viewport_camera.data.output.keys():
                             cam_out[key] = self.isaac_viewport_camera.data.output[key][indices]
-                        
-                        for idx, frustum in enumerate(self.camera_manager.frustums):
+
+                        for idx, (frustum, frustum_name) in enumerate(self.camera_manager.frustums):
                             frustum_data = {}
                             for key in cam_out.keys():
                                 frustum_data[key] = cam_out[key][idx::len(self.camera_manager.frustums)]
-                            buffer_key = frustum.name[1:]
+                            buffer_key = frustum_name[1:]
                             if buffer_key not in self.camera_manager.buffers.keys():
                                 self.camera_manager.buffers[buffer_key] = deque(maxlen=1)
                             self.camera_manager.buffers[buffer_key].append(deepcopy(frustum_data)) # TODO: Check if removing deepcopy breaks things
@@ -392,6 +392,9 @@ class CoffeeMaker(IsaacLabViser):
         """Handle client connection setup"""
         if self.client is None:
             while self.client is None:
+                print("Number of connected clients:", len(self.viser_server.get_clients()))
+                if len(self.viser_server.get_clients()) > 0:
+                    print("clients: ", self.viser_server.get_clients())
                 self.client = (self.viser_server.get_clients()[0] 
                              if len(self.viser_server.get_clients()) > 0 
                              else None)
