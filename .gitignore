@@ -39,7 +39,7 @@ data/corl_data
 
 visualization_output/*
 test/*
-
+kiri_engine_meshes/
 dependencies/
 data/
 .venv/
