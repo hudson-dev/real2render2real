@@ -79,6 +79,15 @@ class YamBaseCfg(InteractiveSceneCfg):
             ),
         cams_per_env = 2,
         )
+    
+    wrist_camera = TiledCameraCfg( # Wrist camera 
+        prim_path="{ENV_REGEX_NS}/Robot/link_1/wrist_cam",
+        height=240,
+        width=320,
+        data_types=["rgb", "depth"],
+        spawn=sim_utils.PinholeCameraCfg(),
+        offset=CameraCfg.OffsetCfg(pos=(0.0, 0.05, 0.0), rot=(1, 0, 0, 0), convention="ros"),
+        )
 
     # wrist_camera = TiledCameraCfg( # Wrist camera example
     #     prim_path="{ENV_REGEX_NS}/Robot/gripper_l_base/wrist_cam",
