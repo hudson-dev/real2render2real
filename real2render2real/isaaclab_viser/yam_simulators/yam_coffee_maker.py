@@ -181,7 +181,7 @@ class CoffeeMaker(IsaacLabViser):
         self.state_machine = ManipulationStateMachine(ManipulationConfig())
         self.state_machine.config.set_part_deltas_length(self.part_deltas.shape[0])
         self.grasp_perturb = None
-        self.render_wrist_cameras = False
+        self.render_wrist_cameras = True
         self.grasped_obj_loc_augment = True
         self.run_simulator()
     
@@ -479,7 +479,10 @@ class CoffeeMaker(IsaacLabViser):
                             self.camera_manager.buffers[buffer_key].append(deepcopy(frustum_data)) # TODO: Check if removing deepcopy breaks things
                             # frustum.image = self.camera_manager.buffers[buffer_key][0]["rgb"][self.env].clone().cpu().detach().numpy()
         if self.init_viser and self.client is not None:
-            if len(self.camera_manager.buffers[self.camera_manager.render_cam]) > 0:
+            if self.camera_manager.render_cam == "wrist_camera" and 'wrist_camera' in self.scene.sensors:
+                wrist_cam_data = self.scene.sensors['wrist_camera'].data.output
+                self.isaac_viewport_viser_handle.image = wrist_cam_data["rgb"][self.env].clone().cpu().detach().numpy()
+            elif len(self.camera_manager.buffers[self.camera_manager.render_cam]) > 0:
                 self.isaac_viewport_viser_handle.image = self.camera_manager.buffers[self.camera_manager.render_cam][0]["rgb"][self.env].clone().cpu().detach().numpy()
         
         self.sim.render()
@@ -1202,6 +1205,8 @@ class CoffeeMaker(IsaacLabViser):
                     self._update_debug_markers()
                     
             self.isaac_viewport_camera.update(0, force_recompute=True)
+            if 'wrist_camera' in self.scene.sensors:
+                self.scene.sensors['wrist_camera'].update(0, force_recompute=True)
             
         self.sim_step_time_ms.value = (time.time() - sim_start_time) * 1e3
     

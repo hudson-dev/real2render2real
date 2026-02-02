@@ -140,7 +140,7 @@ class IsaacLabViser:
         self.urdf_vis['robot'].update_cfg(default_joint_pos_dict)
         
         self.camera_manager = CameraManager(self.viser_server, self.scene)
-        self.use_viewport = len(self.camera_manager.frustums) == 0
+        self.use_viewport = len(self.camera_manager.frustums) == 0 #true if no frustums
     
     def _setup_viser_gui(self):
         viewport_folder = self.viser_server.gui.add_folder("Viewport")
@@ -169,6 +169,12 @@ class IsaacLabViser:
         # Setup camera manager GUI
         self.camera_manager.setup_gui(viewport_folder, controls_folder)
         
+        # Add wrist camera to selector if it exists
+        if 'wrist_camera' in self.scene.sensors and self.camera_manager.camera_selector is not None:
+            camera_options = [f"camera_{i}" for i in range(len(self.camera_manager.frustums))]
+            camera_options.append("wrist_camera")
+            self.camera_manager.camera_selector.options = camera_options
+        
         @self.env_selector.on_update
         def _(_) -> None:
             self.env = int(self.env_selector.value)
@@ -182,6 +188,7 @@ class IsaacLabViser:
         if self.client is not None and self.use_viewport:
             if getattr(self.isaac_viewport_camera.cfg, "cams_per_env", None) is not None: # Handle batched tiled renderer for multiple cameras per environment
                 repeat_n = self.scene_config.num_envs * self.isaac_viewport_camera.cfg.cams_per_env
+                print("HERE: ", self.isaac_viewport_camera.cfg.cams_per_env)
             else:
                 repeat_n = self.scene_config.num_envs
             xyz = torch.tensor(self.client.camera.position).unsqueeze(0).repeat(repeat_n, 1)
@@ -241,7 +248,11 @@ class IsaacLabViser:
             #         self.camera_manager.buffers[camera_frustum.name[1:]].append(deepcopy(self.isaac_viewport_camera.data.output))
             #         camera_frustum.image = self.camera_manager.buffers[camera_frustum.name[1:]][0]["rgb"][self.env].clone().cpu().detach().numpy()
         if self.init_viser and self.client is not None:
-            if len(self.camera_manager.buffers[self.camera_manager.render_cam]) > 0:
+            # Handle wrist camera rendering
+            if self.camera_manager.render_cam == "wrist_camera" and 'wrist_camera' in self.scene.sensors:
+                wrist_cam_data = self.scene.sensors['wrist_camera'].data.output
+                self.isaac_viewport_viser_handle.image = wrist_cam_data["rgb"][self.env].clone().cpu().detach().numpy()
+            elif len(self.camera_manager.buffers[self.camera_manager.render_cam]) > 0:
                 self.isaac_viewport_viser_handle.image = self.camera_manager.buffers[self.camera_manager.render_cam][0]["rgb"][self.env].clone().cpu().detach().numpy()
         return
     

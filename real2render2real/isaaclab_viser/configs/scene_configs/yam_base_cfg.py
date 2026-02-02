@@ -77,11 +77,11 @@ class YamBaseCfg(InteractiveSceneCfg):
             width=1280,
             clipping_range=(0.01, 20),
             ),
-        cams_per_env = 2,
+        cams_per_env = 3,
         )
     
     wrist_camera = TiledCameraCfg( # Wrist camera 
-        prim_path="{ENV_REGEX_NS}/Robot/link_1/wrist_cam",
+        prim_path="{ENV_REGEX_NS}/Robot/link_5/wrist_cam",
         height=240,
         width=320,
         data_types=["rgb", "depth"],
