@@ -55,7 +55,7 @@ def main():
     # scene_config = YumiCardboardPickupCfg(num_envs=2, env_spacing=80.0)
     # scene_config = FrankaCoffeeMakerCfg(num_envs=2, env_spacing=1.5)
     # scene_config = YamFaucetCfg(num_envs=2, env_spacing=80.0)
-    scene_config = YamCoffeeMakerCfg(num_envs=1, env_spacing=80.0)
+    scene_config = YamCoffeeMakerCfg(num_envs=2, env_spacing=80.0)
 
     output_dir = os.path.join(output_data_dir, "yam_coffee_maker")
     
